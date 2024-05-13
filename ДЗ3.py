@@ -1,10 +1,11 @@
 import networkx as nx
-import matplotlib.pyplot as plt
+import heapq
 
 # Створення графа
 G = nx.Graph()
 
-# Додавання станцій і часу
+
+# Додавання ребер з вагами
 edges_with_weights = [('Lambeth North', 'Oxford Circus', {'weight': 5}), 
                       ('Paddington', 'Waterloo', {'weight': 10}), 
                       ('Willesden Junction', 'Wealdstone', {'weight': 8}), 
@@ -16,17 +17,30 @@ edges_with_weights = [('Lambeth North', 'Oxford Circus', {'weight': 5}),
 
 G.add_edges_from(edges_with_weights)
 
-# Застосування алгоритму Дейкстри
-shortest_paths = nx.single_source_dijkstra_path(G, source='Baker Street')
-shortest_path_lengths = nx.single_source_dijkstra_path_length(G, source='Baker Street')
-print(shortest_paths)  # виведе найкоротші шляхи по часу від вузла 'Baker Street' до всіх інших вузлів
-print("Shortest_path_lengths:")
-print(shortest_path_lengths)  # виведе час найкоротших шляхів від вузла 'Baker Street' до всіх інших вузлів
+# реалізація Dijkstra
+def dijkstra(graph, start):
+    shortest = {vertex: float('infinity') for vertex in graph}
+    shortest[start] = 0
+    pq = [(0,start)]
 
-# Visualization of the graph
-pos = nx.spring_layout(G)  # positions for all nodes
-nx.draw(G, pos, with_labels=True, node_size=700, font_size=9, node_color='skyblue', edge_color='gray')
-nx.draw_networkx_edge_labels(G, pos, edge_labels={(u, v): d['weight'] for u, v, d in G.edges(data=True)})  # Include edge labels
-plt.title("London Tube Network Graph")
-plt.show()
+    while pq:
+        # print("shortest:", shortest)
+        # print(pq)
+        current_distance, current_vertex = heapq.heappop(pq)
 
+        for neighbor, weight in graph[current_vertex].items():
+            distance = current_distance + weight['weight']
+            if distance < shortest[neighbor]:
+                shortest[neighbor] = distance
+                heapq.heappush(pq, (distance, neighbor))
+
+    return shortest
+
+# Виклик функції Dijkstra
+result = dijkstra(G, 'Baker Street')
+
+# Відсортуємо результати за відстанями
+sorted_result = {k: v for k, v in sorted(result.items(), key=lambda item: item[1])}
+
+# Виведемо відсортовані результати
+print(sorted_result)
